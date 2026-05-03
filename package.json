@@ -1,11 +1,11 @@
 {
-  "name": "backend",
+  "name": "pokemon-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "pokescript.js",
+  "description": "Pokemon Stock Monitor Backend",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node pokescript.js"
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
