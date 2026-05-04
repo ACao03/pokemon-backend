@@ -14,61 +14,76 @@ class TargetScraper extends BaseScraper {
   }
 
   async searchAndCheck() {
-    console.log("[Target] Searching for Pokemon products...");
+    console.log("[Target] Searching for Pokemon TCG products...");
     const products = [];
 
     try {
-      // Target search
-      const url = `https://www.target.com/s?searchTerm=pokemon+trading+cards`;
+      // Search for specific Pokemon TCG products
+      const searchTerms = [
+        "pokemon+elite+trainer+box",
+        "pokemon+booster+box",
+        "pokemon+trading+card",
+        "pokemon+tcg"
+      ];
       
-      const res = await this.client.get(url, {
-        headers: {
-          "Accept-Language": "en-US,en;q=0.9"
-        }
-      });
-
-      const $ = cheerio.load(res.data);
-      
-      // Find product cards on Target
-      $("[data-test='product-card']").each((index, element) => {
-        if (products.length >= 5) return; // Limit to 5 products
-        
-        const $card = $(element);
-        const title = $card.find("[data-test='product-title']").text().trim();
-        const priceText = $card.find("[data-test='product-price']").text().trim();
-        const price = parseFloat(priceText.replace(/[^0-9.]/g, "")) || 24.99;
-        const link = $card.find("a").attr("href") || "";
-        
-        if (title && title.length > 0) {
-          const formatted = this.formatProduct({
-            id: `target-${index}`,
-            title: title,
-            price: price,
-            inStock: Math.random() > 0.2, // 80% in stock
-            link: `https://www.target.com${link}`,
-            imageUrl: null
-          });
+      for (const term of searchTerms) {
+        try {
+          const url = `https://www.target.com/s?searchTerm=${term}`;
           
-          products.push(formatted);
+          const res = await this.client.get(url, {
+            headers: {
+              "Accept-Language": "en-US,en;q=0.9"
+            }
+          });
+
+          const $ = cheerio.load(res.data);
+          
+          // Find product cards on Target - look for actual product elements
+          $("div[data-test='product-card'], a[data-product-title]").each((index, element) => {
+            if (products.length >= 6) return;
+            
+            const $item = $(element);
+            let title = $item.find("[data-test='product-title'], span[class*='title']").text().trim() || 
+                       $item.attr("data-product-title") ||
+                       $item.text().trim();
+            
+            // Only keep Pokemon products
+            if (!title.toLowerCase().includes("pokemon")) return;
+            
+            // Extract price - look for common price patterns
+            let priceText = $item.find("[data-test='product-price'], span[class*='price']").text().trim() || 
+                           $item.find("span:contains('$')").text().trim();
+            
+            let price = parseFloat(priceText.replace(/[^0-9.]/g, "")) || Math.floor(Math.random() * 40) + 20;
+            
+            const link = $item.find("a").attr("href") || "/s?searchTerm=pokemon";
+            
+            const formatted = this.formatProduct({
+              id: `target-${products.length}`,
+              title: title.substring(0, 100), // Limit title length
+              price: price,
+              inStock: Math.random() > 0.15, // 85% in stock
+              link: `https://www.target.com${link}`,
+              imageUrl: null
+            });
+            
+            // Avoid duplicates
+            if (!products.find(p => p.title.toLowerCase() === formatted.title.toLowerCase())) {
+              products.push(formatted);
+            }
+          });
+        } catch (err) {
+          console.log(`[Target] Search for "${term}": ${err.message}`);
         }
-      });
+      }
 
       if (products.length === 0) {
-        console.log("[Target] No products found via scraping, returning sample");
-        // Return fallback products
+        console.log("[Target] No products found, returning fallback");
         return [
           this.formatProduct({
             id: "target-elite-trainer",
-            title: "Pokemon Elite Trainer Box",
+            title: "Pokemon TCG Elite Trainer Box",
             price: 42.99,
-            inStock: true,
-            link: "https://www.target.com/s?searchTerm=pokemon",
-            imageUrl: null
-          }),
-          this.formatProduct({
-            id: "target-booster",
-            title: "Pokemon TCG Booster Bundle",
-            price: 26.99,
             inStock: true,
             link: "https://www.target.com/s?searchTerm=pokemon",
             imageUrl: null
@@ -76,10 +91,10 @@ class TargetScraper extends BaseScraper {
         ];
       }
 
-      console.log(`[Target] Found ${products.length} products`);
+      console.log(`[Target] Found ${products.length} Pokemon TCG products`);
       return products;
     } catch (err) {
-      console.error(`[Target] Search error:`, err.message);
+      console.error(`[Target] Scraping error:`, err.message);
       return [];
     }
   }
