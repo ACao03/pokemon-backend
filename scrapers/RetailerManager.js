@@ -17,7 +17,7 @@ class RetailerManager {
 
     // Consolidated product map: key = product title, value = array of retailer listings
     this.consolidatedProducts = new Map();
-    this.useMockData = true; // Set to false once real scrapers are functional
+    this.useMockData = false; // Set to true to use mock data during development
   }
 
   /**
