@@ -5,6 +5,7 @@
 const TargetScraper = require("./TargetScraper");
 const BestBuyScraper = require("./BestBuyScraper");
 const PokemonOfficialScraper = require("./PokemonOfficialScraper");
+const { mockProducts } = require("./mockData");
 
 class RetailerManager {
   constructor() {
@@ -16,6 +17,7 @@ class RetailerManager {
 
     // Consolidated product map: key = product title, value = array of retailer listings
     this.consolidatedProducts = new Map();
+    this.useMockData = false; // Set to false to use real scrapers
   }
 
   /**
@@ -24,22 +26,33 @@ class RetailerManager {
   async checkAllRetailers() {
     console.log("🛍️  Checking all retailers...");
 
-    const results = await Promise.allSettled(
-      this.scrapers.map(scraper => scraper.searchAndCheck())
-    );
-
     let allProducts = [];
 
-    results.forEach((result, index) => {
-      if (result.status === "fulfilled") {
-        const retailer = this.scrapers[index].name;
-        console.log(`✓ ${retailer}: Found ${result.value.length} products`);
-        allProducts = allProducts.concat(result.value);
-      } else {
-        const retailer = this.scrapers[index].name;
-        console.error(`✗ ${retailer}: ${result.reason.message}`);
+    if (this.useMockData) {
+      console.log("📋 Using mock data for demonstration");
+      allProducts = mockProducts;
+    } else {
+      const results = await Promise.allSettled(
+        this.scrapers.map(scraper => scraper.searchAndCheck())
+      );
+
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          const retailer = this.scrapers[index].name;
+          console.log(`✓ ${retailer}: Found ${result.value.length} products`);
+          allProducts = allProducts.concat(result.value);
+        } else {
+          const retailer = this.scrapers[index].name;
+          console.error(`✗ ${retailer}: ${result.reason.message}`);
+        }
+      });
+
+      // Fall back to mock data if no real products found
+      if (allProducts.length === 0) {
+        console.log("⚠️  No products found from scrapers, using mock data");
+        allProducts = mockProducts;
       }
-    });
+    }
 
     // Consolidate by product name
     this.consolidatedProducts.clear();
