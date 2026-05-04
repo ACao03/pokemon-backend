@@ -32,6 +32,23 @@ const MAX_HISTORY = 50;
 
 // ===== API ROUTES =====
 
+// Root route
+app.get("/", (req, res) => {
+  res.json({
+    status: "🎉 Pokemon Stock Tracker Backend Running",
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      products: "/api/products",
+      productsInStock: "/api/products/in-stock",
+      productsOutOfStock: "/api/products/out-of-stock",
+      retailers: "/api/retailers",
+      retailerProducts: "/api/retailers/:name/products",
+      priceComparison: "/api/price-comparison/:product",
+      history: "/api/history/:productTitle"
+    }
+  });
+});
+
 app.get("/api/products", (req, res) => {
   res.json(consolidatedState);
 });
