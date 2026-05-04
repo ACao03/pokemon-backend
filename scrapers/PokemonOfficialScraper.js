@@ -16,42 +16,22 @@ class PokemonOfficialScraper extends BaseScraper {
   }
 
   async search(term) {
-    // Pokemon's official TCG store API
-    const url = `https://www.pokemon.com/api/search?q=${encodeURIComponent(term)}`;
+    // Using free Pokemon TCG API
+    const url = `https://api.pokemontcg.io/v2/products?q=name:${encodeURIComponent(term)}`;
     
     try {
       const res = await this.client.get(url);
-      return res.data?.results || [];
+      return res.data?.data || [];
     } catch (err) {
-      console.error(`[PokemonOfficial] Search error:`, err.message);
+      console.error(`[PokemonOfficial] Search error for "${term}":`, err.message);
       return [];
     }
   }
 
   async checkStock(productId) {
-    const url = `https://www.pokemon.com/api/product/${productId}`;
-    
-    try {
-      const res = await this.client.get(url);
-      const data = res.data;
-      
-      if (!data) return null;
-
-      const formatted = this.formatProduct({
-        id: productId,
-        title: data.name || "Unknown",
-        price: data.price || "N/A",
-        inStock: data.stock > 0,
-        link: `https://www.pokemon.com/us/pokemon-tcg/product/${productId}`,
-        imageUrl: data.image || null
-      });
-
-      this.updateProduct(productId, formatted);
-      return formatted;
-    } catch (err) {
-      console.error(`[PokemonOfficial] Stock check error:`, err.message);
-      return null;
-    }
+    // Pokemon TCG API doesn't provide real-time stock
+    // This is a limitation - would need partnership API
+    return null;
   }
 
   async searchAndCheck() {
@@ -67,19 +47,9 @@ class PokemonOfficialScraper extends BaseScraper {
       }
     }
 
-    const unique = new Set(discovered.map(p => p.id).filter(Boolean));
-    const checked = [];
-
-    for (const productId of unique) {
-      try {
-        const result = await this.checkStock(productId);
-        if (result) checked.push(result);
-      } catch (err) {
-        console.error(`[PokemonOfficial] Check failed:`, err.message);
-      }
-    }
-
-    return checked;
+    // Note: Pokemon TCG API doesn't provide stock data, only product catalog
+    // Would need official Pokemon store API (which requires partnership)
+    return [];
   }
 }
 

@@ -16,12 +16,9 @@ class BestBuyScraper extends BaseScraper {
   }
 
   async search(term) {
-    const url = `https://www.bestbuy.com/site/searchpage.jsp?st=${encodeURIComponent(term)}`;
-    
+    // Best Buy requires web scraping or partnership API
+    // Their search API is not publicly available
     try {
-      const res = await this.client.get(url);
-      // Note: This would require HTML parsing with cheerio or similar
-      // For now, we'll make a simpler API call if available
       console.log(`[BestBuy] Searching for: ${term}`);
       return [];
     } catch (err) {
@@ -31,36 +28,13 @@ class BestBuyScraper extends BaseScraper {
   }
 
   async checkStock(sku) {
-    // Best Buy API endpoint
-    const url = `https://www.bestbuy.com/api/3.0/priceBlocks?skus=${sku}`;
-    
-    try {
-      const res = await this.client.get(url);
-      const data = res.data?.priceBlocks?.[0];
-      
-      if (!data) return null;
-
-      const formatted = this.formatProduct({
-        id: sku,
-        title: data.productName || "Unknown",
-        price: data.currentPrice || "N/A",
-        inStock: data.soldOut === false,
-        link: `https://www.bestbuy.com/site/${sku}`,
-        imageUrl: null
-      });
-
-      this.updateProduct(sku, formatted);
-      return formatted;
-    } catch (err) {
-      console.error(`[BestBuy] Stock check error:`, err.message);
-      return null;
-    }
+    return null;
   }
 
   async searchAndCheck() {
     console.log("[BestBuy] Searching pokemon products...");
-    // This would need more sophisticated scraping
-    // For MVP, we can leave this as a placeholder
+    // Best Buy scraper requires web scraping infrastructure
+    // Cheerio/puppeteer would be needed to parse HTML
     return [];
   }
 }
